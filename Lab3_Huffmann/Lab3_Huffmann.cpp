@@ -12,30 +12,33 @@ void encodeData(ifstream& in, HuffmanCode codeMap, BitStream& out) {
     if (!in.is_open() || !out.is_open())
         return;
 
-    //EOF code
-    std::vector<int> eof_code;
+    char next = in.get();
     // find and write code
-    while (true) {
-        char ch = in.get();
-        for (auto &i : codeMap) {
-            // init eof code
-            if (eof_code.empty() && i.ch == EOF)
-                eof_code = i.code;
-            //writing file
-            if (i.ch == ch) {
-                for (auto j : i.code)
-                    out.putbit(j);
+    while (!in.eof()) {
+        // get char
+        char curr = next;
+        next = in.get();
+        //find code
+        std::vector<int> code;
+        for (auto& i : codeMap) {
+            if (i.ch == curr) {
+                code = i.code;
                 break;
             }
         }
-        if (in.eof()) break; // in the end so EOF code will be print out
-    }
 
-    // print eof until bitstream is empty
-    for (unsigned int i = 0; !out.buff_is_empty();i++) {
-        out.putbit(eof_code[i]);
-        if (i >= eof_code.size() - 1)
-            i = -1;
+        //write data
+
+        if (in.eof()) {
+            out.putbit(0);
+            for (auto j : code)
+                out.putbit(j);
+        }
+        else {
+            out.putbit(1);
+            for (auto j : code)
+                out.putbit(j);
+        }
     }
 }
 
@@ -50,16 +53,17 @@ char nextChar(BitStream& in, HuffmanTree Tree) {
 
     // Traverse tree
     if (in.getbit() == 0)
-        nextChar(in, Tree->left);
+        return nextChar(in, Tree->left);
     else
-        nextChar(in, Tree->right);
+        return nextChar(in, Tree->right);
 }
 
 void decodeData(BitStream& in, HuffmanTree Tree, ofstream& out) {
     while (true) {
-        char ch = nextChar(in, Tree);
-        if (ch == EOF) break;
-        out << ch;
+        char ch = in.getbit();
+        out.put(nextChar(in, Tree));
+        if (ch == 0)
+            break;
     }
 }
 
@@ -130,19 +134,19 @@ int main(int argc, char* argv[]){
     cin >> cprss;
 
     if (cprss) {
-        outFile = inFile + ".hc";
-        ifstream in(inFile, ios::binary);
+        ifstream in(inFile, ios::in | ios::binary);
         if (!in.is_open()) return -1;
+        outFile = inFile + ".hc";
         BitStream out(outFile.c_str(), Mode::write);
         compress(in, out);
         in.close();
         out.close();
     }
     else {
-        outFile = outputfileName(string(inFile));
         BitStream in(inFile.c_str(), Mode::read);
         if (!in.is_open()) return -1;
-        ofstream out(outFile);
+        outFile = outputfileName(string(inFile));
+        ofstream out(outFile, ios::binary);
         decompress(in, out);
         in.close();
         out.close();

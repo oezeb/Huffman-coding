@@ -57,6 +57,9 @@ public:
 
 	void close();
 
+	void put_buffer_bits();
+
+	void put_buffer_char();
 };
 
 
@@ -164,10 +167,28 @@ bool BitStream::buff_is_empty() {
 
 void BitStream::close() {
 	// output reamaining dat befor closing
-	if (mode == app || mode == write)
-		while (!buff_is_empty())
-			putbit(1);
+	put_buffer_char();
 	stream.close();
+}
+
+void BitStream::put_buffer_bits() {
+	while (index != BYTE) {
+		// get the MSB of buffer binary equivalent
+		int bit = buffer & 0X80 ? 1 : 0;
+		stream.put(bit);
+
+		// left shift buffer
+		buffer <<= 1;
+		++index;
+	}
+}
+
+void BitStream::put_buffer_char() {
+	if ((mode == app || mode == write) && !buff_is_empty()) {
+		stream.put(buffer);
+		buffer = 0;
+		index = BYTE;
+	}
 }
 
 int BitStream::pow2(unsigned int exp) {

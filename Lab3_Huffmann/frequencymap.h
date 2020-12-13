@@ -22,13 +22,13 @@ FrequencyMap initFrequencyMap(std::ifstream& in) {
     // get each char frequency
     while (true) {
         char ch = in.get();
+        if (in.eof()) break;
         // find current char
         FrequencyMap::iterator it = freqMap.find(ch);
         if (it == freqMap.end()) //not found
             freqMap.insert(std::pair<char, int>(ch, 1));
         else
             it->second++;  //freq++
-        if (in.eof()) break; // in the end so EOF will be included in the map
     }
     return freqMap;
 }
