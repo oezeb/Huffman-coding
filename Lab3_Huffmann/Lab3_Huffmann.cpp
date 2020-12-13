@@ -12,58 +12,28 @@ void encodeData(ifstream& in, HuffmanCode codeMap, BitStream& out) {
     if (!in.is_open() || !out.is_open())
         return;
 
-    char next = in.get();
     // find and write code
-    while (!in.eof()) {
+    while (true) {
         // get char
-        char curr = next;
-        next = in.get();
+        char ch = in.get();
+        if (in.eof()) break;
         //find code
-        std::vector<int> code;
         for (auto& i : codeMap) {
-            if (i.ch == curr) {
-                code = i.code;
+            if (i->ch == ch) {
+                for (auto j : i->code)
+                    out.putbit(j);
                 break;
             }
-        }
-
-        //write data
-
-        if (in.eof()) {
-            out.putbit(0);
-            for (auto j : code)
-                out.putbit(j);
-        }
-        else {
-            out.putbit(1);
-            for (auto j : code)
-                out.putbit(j);
         }
     }
 }
 
-char nextChar(BitStream& in, HuffmanTree Tree) {
-    // Basic conditions
-    if (!in.is_open() || in.getstream().eof() || !Tree)
-        return EOF;
-
-    // Get char
-    if (!Tree->left && !Tree->right)  //leaf
-        return Tree->ch;
-
-    // Traverse tree
-    if (in.getbit() == 0)
-        return nextChar(in, Tree->left);
-    else
-        return nextChar(in, Tree->right);
-}
-
 void decodeData(BitStream& in, HuffmanTree Tree, ofstream& out) {
     while (true) {
-        char ch = in.getbit();
-        out.put(nextChar(in, Tree));
-        if (ch == 0)
+        HuffmanNode* node = nextVex(in, Tree);
+        if (!node || node->freq == 0)
             break;
+        out.put(node->ch);
     }
 }
 
@@ -86,15 +56,34 @@ void compress(ifstream& in, BitStream& out) {
     // Init Huffman Tree
     HuffmanTree HT = initHuffmanTree(p_queue);
 
+
     // Get Huffman Code
     HuffmanCode HC = initHuffmanCode(HT);
     HC.sort(HuffmanCodeCompare); // sort Huffman Code List
 
-    // store Huffman Tree
-    storeHuffmanTree(HT, out);
+    //print tree leaves number
+    out.putchar(HC.size());
+
+    // store Tree leaves
+    storeHuffmanLeaf(HT, out);
+
+    //
+    HuffmanNode* tmp = NULL;
+    for (auto& i : HC) {
+        if (i->freq == 0) {
+            tmp = i;
+            HC.remove(i);
+            break;
+        }
+    }
 
     // Encode data
     encodeData(in, HC, out);
+
+    //
+    if (tmp)
+        for (auto& i : tmp->code)
+            out.putbit(i);
 }
 
 void decompress(BitStream& in, ofstream& out) {
@@ -102,9 +91,19 @@ void decompress(BitStream& in, ofstream& out) {
     if (!in.is_open() || !out.is_open())
         return;
 
+    //get leaves number
+    int numb = in.getchar();
 
-    // get stored Huffman Tree from file
-    HuffmanTree HT = getHuffmanTree(in);
+    // get stored Huffman leaves data from file
+    priority_queue<HuffmanNode> p_queue;
+    for (int i = 0; i < numb; i++) {
+        char ch = in.getchar();
+        int freq = in.getchar();
+        p_queue.push(HuffmanNode(ch, freq));
+    }
+
+    // Init Huffman Tree
+    HuffmanTree HT = initHuffmanTree(p_queue);
 
     // Decode Data
     decodeData(in, HT, out);

@@ -24,17 +24,26 @@ typedef struct HuffmanNode {
 
 }HuffmanNode, * HuffmanTree;
 
-typedef std::list<HuffmanNode> HuffmanCode;
+typedef std::list<HuffmanNode*> HuffmanCode;
 
 
 // Can be used to sort Huffman code
-bool HuffmanCodeCompare(HuffmanNode const& node1, HuffmanNode const& node2) {
-    return node1.code.size() < node2.code.size();
+bool HuffmanCodeCompare(HuffmanNode* const& node1, HuffmanNode* const& node2) {
+    return node1->code.size() < node2->code.size();
 }
 
 // Used in priority queue
 bool operator<(HuffmanNode const& node1, HuffmanNode const& node2) {
     return node1.freq > node2.freq;
+}
+
+//
+bool operator==(HuffmanNode const& node1, HuffmanNode const& node2) {
+    return node1.ch == node2.ch &&
+        node1.code == node2.code &&
+        node1.freq == node2.freq &&
+        node1.left == node2.left &&
+        node1.right == node2.right;
 }
 
 // Create Huffman Tree from priority queue
@@ -68,7 +77,7 @@ HuffmanCode initHuffmanCode(HuffmanTree& T) {
     if (!T) //empty tree
         return HuffmanCode();
     if (!T->left && !T->right) //no child
-        return HuffmanCode(1, *T);
+        return HuffmanCode(1, T);
 
     // get current node code;
     std::vector<int> code = T->code;
@@ -92,6 +101,19 @@ HuffmanCode initHuffmanCode(HuffmanTree& T) {
     HC.insert(HC.end(), tmp.begin(), tmp.end());
 
     return HC;
+}
+
+void storeHuffmanLeaf(HuffmanTree& T, BitStream& out) {
+    //Basic Conditions
+    if (!T || !out.is_open()) 
+        return;
+    if (!T->left && !T->right) { //leaf
+        out.putchar(T->ch);
+        out.putchar(T->freq);
+        return;
+    }
+    storeHuffmanLeaf(T->left, out);
+    storeHuffmanLeaf(T->right, out);
 }
 
 void storeHuffmanTree(HuffmanTree& T, BitStream& out) {
@@ -124,5 +146,20 @@ HuffmanTree getHuffmanTree(BitStream& out) {
     }
 }
 
+HuffmanNode* nextVex(BitStream& in, HuffmanTree Tree) {
+    // Basic conditions
+    if (!in.is_open() || in.getstream().eof() || !Tree)
+        return NULL;
+
+    // Get char
+    if (!Tree->left && !Tree->right)  //leaf
+        return Tree;
+
+    // Traverse tree
+    if (in.getbit() == 0)
+        return nextVex(in, Tree->left);
+    else
+        return nextVex(in, Tree->right);
+}
 
 #endif // !HUFFMAN_TREE
