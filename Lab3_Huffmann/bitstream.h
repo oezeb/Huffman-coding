@@ -39,6 +39,8 @@ public:
 
 	void open(char const* filename, Mode openMode);
 
+	std::fstream& getstream() { return stream; }
+
 	int getbit();
 
 	int getchar();
@@ -49,7 +51,9 @@ public:
 
 	bool is_open() { return stream.is_open(); }
 
-	bool eof();
+	bool eof() { return  buff_is_empty() && stream.eof(); }
+
+	bool buff_is_empty();
 
 	void close();
 
@@ -58,19 +62,19 @@ public:
 
 void BitStream::open(char const* filename, Mode openMode) {
 	//init class variables
-	mode = openMode; 
-	buffer = 0; 
+	mode = openMode;
+	buffer = 0;
 	// open file
 	switch (openMode) {
 	case read:
 		stream.open(filename, std::ios::in | std::ios::binary);
-		index = 0;  
+		index = 0;
 		break;
-	case write: 
+	case write:
 		stream.open(filename, std::ios::out | std::ios::binary);
-		index = BYTE; 
+		index = BYTE;
 		break;
-	case app:  
+	case app:
 		stream.open(filename, std::ios::app | std::ios::binary);
 		index = BYTE;
 		break;
@@ -82,18 +86,20 @@ int BitStream::getbit() {
 	if (mode != read) // current stream is not input stream
 		return bit;
 
-	if (index > 0) { // buffer is not empty
+	if (buff_is_empty()) {
+		// get new data
+		buffer = stream.get();
+		index = BYTE;
+		// get bit from new data
+		bit = getbit();
+	}
+	else {
 		// get the MSB of buffer binary equivalent
 		bit = buffer & 0X80 ? 1 : 0;
 
 		// left shift buffer
 		buffer <<= 1;
 		--index;
-	}
-	else { // buffer is empty
-		buffer = stream.get();
-		index = BYTE;
-		bit = getbit();
 	}
 	return bit;
 }
@@ -114,23 +120,22 @@ int BitStream::getchar() {
 
 void BitStream::putbit(int bit) {
 	// Basic Conditions
-	if (mode != app && mode != write) 
+	if (mode != app && mode != write)
 		return;
-	if ((bit != 0 && bit != 1)) { // input is not binary
-		putchar(bit);
-	}
-	else {
+
+	if ((bit == 0 || bit == 1)) {
 		index--;
-		if (index < 0) { // buffer is full
+		if (bit) //when bit == 0 , bit*pow(2,i) is 0 too
+			buffer += pow2(index);
+		if (index <= 0) { // buffer is full
 			// write out buffer then reset it
 			stream.put(buffer);
 			buffer = 0;
-			// put current bit in buffer
 			index = BYTE;
-			putbit(bit);
 		}
-		else if (bit) // buffer is not full (when bit == 0 , bit*pow(2,i) is 0 too)
-			buffer += pow2(index);
+	}
+	else { // input is not binary
+		putchar(bit);
 	}
 }
 
@@ -146,29 +151,22 @@ void BitStream::putchar(int ch) {
 	}
 }
 
-bool BitStream::eof() {
-	// when stream is EOF, still have to check if buffer is empty
+bool BitStream::buff_is_empty() {
 	// input stream: buffer is empty when index == 0
 	// output stream: buffer is empty when index == BYTE
-	if (mode == read) 
-		return index == 0 && stream.eof();
-	else if (mode == none) 
-		return stream.eof();
+	if (mode == read)
+		return  index == 0;
+	else if (mode == none)
+		return true;
 	else
-		return  index == BYTE && stream.eof();
+		return index == BYTE;
 }
 
 void BitStream::close() {
 	// output reamaining dat befor closing
-	if (index < BYTE) {// buffer is not empty
-		if (mode == app || mode == write) {
-			while (index > 0) // put 1 until buffer is full
-				putbit(1);
-			// print out buffer and EOF
-			stream.put(buffer);
-			index = BYTE;
-		}
-	}
+	if (mode == app || mode == write)
+		while (!buff_is_empty())
+			putbit(1);
 	stream.close();
 }
 
@@ -187,4 +185,3 @@ int BitStream::pow2(unsigned int exp) {
 }
 
 #endif // !BIT_STREAM
-

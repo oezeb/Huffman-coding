@@ -12,10 +12,16 @@ void encodeData(ifstream& in, HuffmanCode codeMap, BitStream& out) {
     if (!in.is_open() || !out.is_open())
         return;
 
+    //EOF code
+    std::vector<int> eof_code;
     // find and write code
     while (true) {
         char ch = in.get();
         for (auto &i : codeMap) {
+            // init eof code
+            if (eof_code.empty() && i.ch == EOF)
+                eof_code = i.code;
+            //writing file
             if (i.ch == ch) {
                 for (auto j : i.code)
                     out.putbit(j);
@@ -24,11 +30,18 @@ void encodeData(ifstream& in, HuffmanCode codeMap, BitStream& out) {
         }
         if (in.eof()) break; // in the end so EOF code will be print out
     }
+
+    // print eof until bitstream is empty
+    for (unsigned int i = 0; !out.buff_is_empty();i++) {
+        out.putbit(eof_code[i]);
+        if (i >= eof_code.size() - 1)
+            i = -1;
+    }
 }
 
 char nextChar(BitStream& in, HuffmanTree Tree) {
     // Basic conditions
-    if (!in.is_open() || in.eof() || !Tree)
+    if (!in.is_open() || in.getstream().eof() || !Tree)
         return EOF;
 
     // Get char
@@ -44,7 +57,7 @@ char nextChar(BitStream& in, HuffmanTree Tree) {
 
 void decodeData(BitStream& in, HuffmanTree Tree, ofstream& out) {
     while (true) {
-        char ch =  nextChar(in, Tree);
+        char ch = nextChar(in, Tree);
         if (ch == EOF) break;
         out << ch;
     }
