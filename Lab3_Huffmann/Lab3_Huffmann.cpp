@@ -1,8 +1,9 @@
 #include <iostream>
-#include<string>
-#include"Huffman_Tree.h"
-#include"frequencymap.h"
-#include"bitstream.h"
+#include <string>
+#include "Huffman_Tree.h"
+#include "frequencymap.h"
+#include "bitstream.h"
+#include "console.h"
 
 using namespace std;
 
@@ -118,34 +119,29 @@ string outputfileName(string inputfile) {
 }
 
 int main(int argc, char* argv[]){
-    string inFile, outFile;
-    if (argc > 1) 
-        inFile = argv[1];
-    else {
-        cout << "File name : ";
-        char tmp[100];
-        cin.getline(tmp, 100);
-        inFile = tmp;
-    }
+    
+    //arguments list
+    std::vector<std::string> args;
+    for (int i = 1; i < argc; i++)
+        args.push_back(argv[i]);
+    
+    // new console instance
+    Console cmd(args);
 
-    bool cprss = true;
-    cout << "compress(1) or decompress(0) ? ";
-    cin >> cprss;
-
-    if (cprss) {
-        ifstream in(inFile, ios::in | ios::binary);
-        if (!in.is_open()) return -1;
-        outFile = inFile + ".hc";
-        BitStream out(outFile.c_str(), Mode::write);
+    if (cmd.getz()) {//compress
+        std::ifstream in(cmd.getinputfile(), std::ios::in | std::ios::binary);
+        if (!in.is_open())
+            return -1;
+        BitStream out(cmd.getoutputfile().c_str(), Mode::write);
         compress(in, out);
         in.close();
         out.close();
     }
     else {
-        BitStream in(inFile.c_str(), Mode::read);
-        if (!in.is_open()) return -1;
-        outFile = outputfileName(string(inFile));
-        ofstream out(outFile, ios::binary);
+        BitStream in(cmd.getinputfile().c_str(), Mode::read);
+        if (!in.is_open())
+            return -1;
+        std::ofstream out(cmd.getoutputfile(), std::ios::binary);
         decompress(in, out);
         in.close();
         out.close();
