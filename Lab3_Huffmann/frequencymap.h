@@ -30,10 +30,6 @@ FrequencyMap initFrequencyMap(std::ifstream& in) {
         else
             it->second++;  //freq++
     }
-
-    //
-    freqMap.insert(std::pair<char, int>('?', 0));
-
     return freqMap;
 }
 

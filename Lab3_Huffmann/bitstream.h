@@ -81,6 +81,7 @@ void BitStream::open(char const* filename, Mode openMode) {
 		stream.open(filename, std::ios::app | std::ios::binary);
 		index = BYTE;
 		break;
+    default: break;
 	}
 }
 

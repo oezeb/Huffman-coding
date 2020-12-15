@@ -37,15 +37,6 @@ bool operator<(HuffmanNode const& node1, HuffmanNode const& node2) {
     return node1.freq > node2.freq;
 }
 
-//
-bool operator==(HuffmanNode const& node1, HuffmanNode const& node2) {
-    return node1.ch == node2.ch &&
-        node1.code == node2.code &&
-        node1.freq == node2.freq &&
-        node1.left == node2.left &&
-        node1.right == node2.right;
-}
-
 // Create Huffman Tree from priority queue
 HuffmanTree initHuffmanTree(std::priority_queue<HuffmanNode> p_queue) {
 
@@ -103,19 +94,6 @@ HuffmanCode initHuffmanCode(HuffmanTree& T) {
     return HC;
 }
 
-void storeHuffmanLeaf(HuffmanTree& T, BitStream& out) {
-    //Basic Conditions
-    if (!T || !out.is_open()) 
-        return;
-    if (!T->left && !T->right) { //leaf
-        out.putchar(T->ch);
-        out.putchar(T->freq);
-        return;
-    }
-    storeHuffmanLeaf(T->left, out);
-    storeHuffmanLeaf(T->right, out);
-}
-
 void storeHuffmanTree(HuffmanTree& T, BitStream& out) {
     // Basic conditions
     if (!T) return;
@@ -144,6 +122,19 @@ HuffmanTree getHuffmanTree(BitStream& out) {
         HuffmanNode* right = getHuffmanTree(out);
         return new HuffmanNode('?', 1, left, right);
     }
+}
+
+void storeHuffmanLeaf(HuffmanTree& T, BitStream& out) {
+    //Basic Conditions
+    if (!T || !out.is_open())
+        return;
+    if (!T->left && !T->right) { //leaf
+        out.putchar(T->ch);
+        out.putchar(T->freq);
+        return;
+    }
+    storeHuffmanLeaf(T->left, out);
+    storeHuffmanLeaf(T->right, out);
 }
 
 HuffmanNode* nextVex(BitStream& in, HuffmanTree Tree) {
