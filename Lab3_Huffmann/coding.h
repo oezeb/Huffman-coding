@@ -1,4 +1,3 @@
-#include<string>
 #include"Huffman_Tree.h"
 #include"frequencymap.h"
 #include"bitstream.h"

@@ -1,8 +1,3 @@
-#include <iostream>
-#include <string>
-#include "Huffman_Tree.h"
-#include "frequencymap.h"
-#include "bitstream.h"
 #include "console.h"
 #include "coding.h"
 
