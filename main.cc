@@ -1,5 +1,4 @@
 #include <iostream>
-
 #include "huffman.h"
 
 int main(){
@@ -14,7 +13,4 @@ int main(){
 	
     huffman::compress("test/sherlock_holmes.txt", "test/out/sherlock_holmes.o");
 	huffman::decompress("test/out/sherlock_holmes.o", "test/out/sherlock_holmes.o.txt");
-	
-    huffman::compress("test/WizKid - Joro (Official Video).mkv", "test/out/WizKid - Joro (Official Video).o");
-	huffman::decompress("test/out/WizKid - Joro (Official Video).o", "test/out/WizKid - Joro (Official Video).o.mkv");
 }
