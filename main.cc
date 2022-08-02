@@ -1,7 +1,7 @@
 #include <iostream>
 #include "huffman.h"
 
-int main(){
+int main() {
 	huffman::compress("test/mississippi.txt", "test/out/mississippi.o");
 	huffman::decompress("test/out/mississippi.o", "test/out/mississippi.o.txt");
 
