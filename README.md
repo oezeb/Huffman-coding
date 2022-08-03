@@ -1,12 +1,9 @@
 # Huffman Coding
 Compress and Decompress file using Huffman algorithm
 
-mississippi
+## Usage
 
-value | frequence
---- | ---
-m | 1
-i | 4
-s | 4
-p | 2
+    g++ -o huffman main.cc bitstream.h huffman.h
+	./huffman -c <infile> <outfile>
+	./huffman -d <infile> <outfile>
 

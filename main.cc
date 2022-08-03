@@ -23,7 +23,7 @@ int main(int argc, char** argv) {
 
 	cout << "Usage:" << endl;
 	cout << "      g++ -o huffman main.cc bitstream.h huffman.h" << std::endl;
-	cout << "      huffman -c <infile> <outfile>" << endl;
-	cout << "      huffman -d <infile> <outfile>" << endl;
+	cout << "      ./huffman -c <infile> <outfile>" << endl;
+	cout << "      ./huffman -d <infile> <outfile>" << endl;
 	return 0;
 }
